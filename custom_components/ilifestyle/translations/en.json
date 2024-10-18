@@ -1,0 +1,36 @@
+{
+  "title": "iLifestyle",
+  "config": {
+    "step": {
+      "user": {
+        "title": "iLifestyle Setup",
+        "description": "The credentials will be used to connect to the device.",
+        "data": {
+          "ip_address": "IP address of gateway",
+          "username": "Gateway Username",
+          "password": "Gateway Password"
+        }
+      }
+    },
+    "abort": {
+      "connenction": "Error during connection.",
+      "authentication": "Error during authentication.",
+      "unknown": "Unknown Error"
+    }
+  },
+  "entity": {
+    "camera": {
+      "video": {
+        "name": "Door camera"
+      }
+    },
+    "button": {
+        "callbutton": {
+          "name": "Call door"
+        },
+        "openbutton": {
+          "name": "Open door"
+        }
+      }
+  }
+}
