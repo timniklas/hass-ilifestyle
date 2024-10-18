@@ -10,7 +10,7 @@
 
 The iLifestyle Home Assistant Custom Integration allows you to integrate your HHG Villa Gateway with your Home Assistant setup.
 
-![image](https://github.com/user-attachments/assets/0ae369ff-0f94-4c42-80ff-dbe4b6e55b8a)
+![image](https://github.com/user-attachments/assets/72191a2b-6fe4-406b-a7a9-f85adacb3b82)
 
 ### Tested devices
 - HHG Villa GW M
