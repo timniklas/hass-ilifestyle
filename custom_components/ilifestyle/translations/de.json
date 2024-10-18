@@ -1,0 +1,37 @@
+{
+    "title": "iLifestyle",
+    "config": {
+      "step": {
+        "user": {
+          "title": "iLifestyle Setup",
+          "description": "Trage deine HHG Villa GW Zugangsdaten ein.",
+          "data": {
+            "ip_address": "IP-Adresse von Gateway",
+            "username": "Gateway Benutzername",
+            "password": "Gateway Kennwort"
+          }
+        }
+      },
+      "abort": {
+        "connenction": "Fehler bei dem Verbindungsaufbau.",
+        "authentication": "Fehler bei der Authentifizierung.",
+        "unknown": "Unbekannter Fehler."
+      }
+    },
+    "entity": {
+      "camera": {
+        "video": {
+          "name": "Tür Kamera"
+        }
+      },
+      "button": {
+          "callbutton": {
+            "name": "Video starten"
+          },
+          "openbutton": {
+            "name": "Tür öffnen"
+          }
+        }
+    }
+  }
+  
