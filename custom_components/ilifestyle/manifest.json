@@ -1,0 +1,11 @@
+{
+    "domain": "ilifestyle",
+    "name": "iLifestyle",
+    "codeowners": ["@timniklas"],
+    "dependencies": ["ffmpeg"],
+    "config_flow": true,
+    "documentation": "https://github.com/timniklas/hass-ilifestylee",
+    "iot_class": "local_polling",
+    "issue_tracker": "https://github.com/timniklas/hass-ilifestyle/issues",
+    "version": "0.0.0"
+}
