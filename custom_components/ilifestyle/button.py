@@ -5,14 +5,14 @@ import logging
 from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.components.button import ButtonEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.device_registry import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
-from .mqtt import LifestyleMqtt
+from .coordinator import MqttCoordinator
 from .const import DOMAIN
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -25,62 +25,97 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up a Buttons."""
+    # This gets the data update coordinator from hass.data as specified in your __init__.py
+    coordinator: MqttCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ].coordinator
 
     async_add_entities([
-        CallButton(hass, config_entry),
-        OpenButton(hass, config_entry)
+        CallButton(config_entry, coordinator),
+        HangupButton(config_entry, coordinator),
+        OpenButton(config_entry, coordinator)
     ], True)
 
-class CallButton(ButtonEntity):
+class CallButton(CoordinatorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "callbutton"
     _attr_icon = "mdi:video"
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, config_entry: ConfigEntry, coordinator: MqttCoordinator):
         """Initialize."""
-        super().__init__()
-        deviceid = config_entry.data[CONF_DEVICE_ID]
-        token = config_entry.data[CONF_TOKEN]
-        self._mqtt_client = LifestyleMqtt(mqtt_username=deviceid, mqtt_password=token, alias=self._attr_translation_key)
-        self.unique_id = f"{deviceid}-{self._attr_translation_key}"
+        super().__init__(coordinator)
+        self.unique_id = f"{config_entry.data[CONF_DEVICE_ID]}-{self._attr_translation_key}"
         self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, deviceid)}
+            identifiers={(DOMAIN, config_entry.data[CONF_DEVICE_ID])}
         )
-        self._mqtt_client.connect()
 
-    async def async_press(self) -> None:
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
+
+    async def _async_press_action(self) -> None:
         """Handle the button press."""
-        await self._mqtt_client.call_door()
+        await self.coordinator.call_door()
 
     @property
     def available(self) -> bool:
         """Return the state of the sensor."""
-        return self._mqtt_client.connected
+        return self.coordinator.data.connected
 
-class OpenButton(ButtonEntity):
+class HangupButton(CoordinatorEntity):
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "hangupbutton"
+    _attr_icon = "mdi:video-off"
+
+    def __init__(self, config_entry: ConfigEntry, coordinator: MqttCoordinator):
+        """Initialize."""
+        super().__init__(coordinator)
+        self.unique_id = f"{config_entry.data[CONF_DEVICE_ID]}-{self._attr_translation_key}"
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.data[CONF_DEVICE_ID])}
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
+
+    async def _async_press_action(self) -> None:
+        """Handle the button press."""
+        await self.coordinator.hangup_door()
+
+    @property
+    def available(self) -> bool:
+        """Return the state of the sensor."""
+        return self.coordinator.data.connected
+
+class OpenButton(CoordinatorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "openbutton"
     _attr_icon = "mdi:door-open"
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, config_entry: ConfigEntry, coordinator: MqttCoordinator):
         """Initialize."""
-        super().__init__()
-        deviceid = config_entry.data[CONF_DEVICE_ID]
-        token = config_entry.data[CONF_TOKEN]
-        self._mqtt_client = LifestyleMqtt(mqtt_username=deviceid, mqtt_password=token, alias=self._attr_translation_key)
+        super().__init__(coordinator)
         self.unique_id = f"{config_entry.data[CONF_DEVICE_ID]}-{self._attr_translation_key}"
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.data[CONF_DEVICE_ID])}
         )
-        self._mqtt_client.connect()
 
-    async def async_press(self) -> None:
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
+
+    async def _async_press_action(self) -> None:
         """Handle the button press."""
-        await self._mqtt_client.open_door()
+        await self.coordinator.open_door()
 
     @property
     def available(self) -> bool:
         """Return the state of the sensor."""
-        return self._mqtt_client.connected
+        return self.coordinator.data.connected
