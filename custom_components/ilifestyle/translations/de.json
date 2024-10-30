@@ -28,10 +28,12 @@
           "callbutton": {
             "name": "Video starten"
           },
+          "hangupbutton": {
+            "name": "Video stoppen"
+          },
           "openbutton": {
             "name": "Tür öffnen"
           }
         }
     }
   }
-  
