@@ -10,8 +10,9 @@ _LOGGER = logging.getLogger(__name__)
 class LifestyleMqtt:
     """Class for MQTT client."""
 
-    def __init__(self, mqtt_username: str, mqtt_password: str, alias: str = "HomeAssistant") -> None:
+    def __init__(self, mqtt_username: str, mqtt_password: str, callback, alias: str = "HomeAssistant") -> None:
         """Initialise."""
+        self.callback = callback
         self.connected = False
         self._topic = mqtt_username
         self._client = mqtt.Client(client_id = alias + "|" + mqtt_username, protocol = mqtt.MQTTv5, transport = "tcp")
@@ -26,10 +27,11 @@ class LifestyleMqtt:
         else:
             self.connected = False
             _LOGGER.error("Connection to iLifestyle MQTT Broker failed:", rc)
+        self.callback()
 
     def _on_disconnect(self, client, userdata, flags, reason_code, properties=None):
         self.connected = False
-        self.connect()
+        self.callback()
 
     def connect(self):
         if self.connected == False:
@@ -45,6 +47,9 @@ class LifestyleMqtt:
     
     async def call_door(self, duration: int = 60):
         return await self._publish('{"action": "monitor","ctrl":"1","key_index": 1,"duration":' + str(duration) + '}')
+    
+    async def hangup_door(self, duration: int = 60):
+        return await self._publish('{"action": "monitor","ctrl":"F","key_index": 1,"duration":1}')
     
     async def open_door(self):
         return await self._publish('{"action": "OPEN DOOR"}')
