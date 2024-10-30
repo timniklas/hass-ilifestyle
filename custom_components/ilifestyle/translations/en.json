@@ -28,6 +28,9 @@
         "callbutton": {
           "name": "Call door"
         },
+        "hangupbutton": {
+          "name": "Hangup door"
+        },
         "openbutton": {
           "name": "Open door"
         }
