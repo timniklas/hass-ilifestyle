@@ -29,6 +29,7 @@ class LifestyleMqtt:
 
     def _on_disconnect(self, client, userdata, flags, reason_code, properties=None):
         self.connected = False
+        self.connect()
 
     def connect(self):
         if self.connected == False:
