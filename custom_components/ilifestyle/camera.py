@@ -11,11 +11,13 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
 )
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .coordinator import MqttCoordinator
 from .const import DOMAIN
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -30,19 +32,25 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up a Camera."""
-    async_add_entities([LifestyleCamera(hass, config_entry)], True)
+    # This gets the data update coordinator from hass.data as specified in your __init__.py
+    coordinator: MqttCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ].coordinator
+
+    async_add_entities([LifestyleCamera(hass, config_entry, coordinator)], True)
 
 
-class LifestyleCamera(Camera):
+class LifestyleCamera(CoordinatorEntity, Camera):
 
     _attr_has_entity_name = True
     _attr_translation_key = "video"
     _attr_supported_features = CameraEntityFeature.STREAM
     _options = "-pred 1"
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass, config_entry, coordinator):
         """Initialize."""
-        super().__init__()
+        super().__init__(coordinator)
+        Camera.__init__(self)
         self._manager = get_ffmpeg_manager(hass)
         self._url = config_entry.data[CONF_URL]
         self.unique_id = f"{config_entry.data[CONF_DEVICE_ID]}-{self._attr_translation_key}"
@@ -55,6 +63,26 @@ class LifestyleCamera(Camera):
             manufacturer="HHG GmbH",
             identifiers={(DOMAIN, config_entry.data[CONF_DEVICE_ID])}
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return the state of the sensor."""
+        return self.coordinator.data.connected
+
+    @property
+    def is_streaming(self) -> bool:
+        """Return the state of the sensor."""
+        return self.coordinator.data.transmitting
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self.coordinator.data.transmitting
 
     async def stream_source(self) -> str:
         """Return the stream source."""
