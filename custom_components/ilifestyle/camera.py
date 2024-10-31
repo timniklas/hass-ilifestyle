@@ -79,11 +79,6 @@ class LifestyleCamera(CoordinatorEntity, Camera):
         """Return the state of the sensor."""
         return self.coordinator.data.transmitting
 
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the sensor."""
-        return self.coordinator.data.transmitting
-
     async def stream_source(self) -> str:
         """Return the stream source."""
         return self._url.split(" ")[-1]
@@ -92,7 +87,10 @@ class LifestyleCamera(CoordinatorEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        
+
+        if self.is_streaming == False:
+            return None
+
         return await ffmpeg.async_get_image(
             self.hass,
             self._url,
@@ -103,7 +101,11 @@ class LifestyleCamera(CoordinatorEntity, Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
 
+        if self.is_streaming == False:
+            return await self.handle_async_still_stream(request, self.frame_interval)
+
         stream = CameraMjpeg(self._manager.binary)
+
         await stream.open_camera(self._url, extra_cmd=self._options)
 
         try:
