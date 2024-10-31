@@ -35,7 +35,8 @@ class MqttCoordinator(DataUpdateCoordinator):
         deviceid = config_entry.data[CONF_DEVICE_ID]
         token = config_entry.data[CONF_TOKEN]
 
-        self.mqtt_client = LifestyleMqtt(mqtt_username=deviceid, mqtt_password=token, callback=self.updateData)
+        self._hass = hass
+        self.mqtt_client = LifestyleMqtt(mqtt_username=deviceid, mqtt_password=token, callback=self._updateConnection)
         self.transmitting = False
 
         # Initialise DataUpdateCoordinator
@@ -49,18 +50,24 @@ class MqttCoordinator(DataUpdateCoordinator):
             # You can remove this line but left here for explanatory purposes.
             update_interval=None,
         )
-    
-    def updateData(self):
+
+    def _updateData(self):
         self.async_set_updated_data(MqttData(self.mqtt_client.connected, self.transmitting))
+    
+    def _updateConnection(self):
+        self._updateData()
+        self._hass.bus.fire("ilifestyle_connection_event", {"connected": self.mqtt_client.connected})
+    
+    async def _updateTransmission(self, state: bool):
+        if state != self.transmitting: #ignore double fires
+            self.transmitting = state
+            self._updateData()
+            self._hass.bus.fire("ilifestyle_transmission_event", {"transmission": self.transmitting})
 
     async def _transmit(self, duration: int = 60):
         await self._updateTransmission(True)
         await asyncio.sleep(duration)
         await self._updateTransmission(False)
-    
-    async def _updateTransmission(self, state: bool):
-        self.transmitting = state
-        self.updateData()
 
     async def async_update_data(self):
         """Fetch data from API endpoint.
