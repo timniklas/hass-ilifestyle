@@ -14,7 +14,7 @@ The iLifestyle Home Assistant Custom Integration allows you to integrate your HH
 ![image](https://github.com/user-attachments/assets/72191a2b-6fe4-406b-a7a9-f85adacb3b82)
 
 ### Tested devices
-- HHG Villa GW M
+- HHG Villa GW M (AV-Link 4.0.2)
 
 ## Installation
 
