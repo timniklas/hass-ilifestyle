@@ -88,12 +88,13 @@ class LifestyleCamera(CoordinatorEntity, Camera):
     ) -> bytes | None:
         """Return a still image response from the camera."""
 
+        url = self._url
         if self.is_streaming == False:
-            return None
+            url = "/config/custom_components/ilifestyle/blank_image.jpg"
 
         return await ffmpeg.async_get_image(
             self.hass,
-            self._url,
+            url,
             output_format=IMAGE_JPEG,
             extra_cmd=self._options,
         )
